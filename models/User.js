@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import validator from "validator";
-const schema = new mongoose.Scheme({
+import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
+const schema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Please enter your name"],
@@ -39,7 +41,7 @@ const schema = new mongoose.Scheme({
   playlist: [
     {
       course: {
-        type: mongoose.Schema.Type.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Course",
       },
       poster: String,
@@ -52,5 +54,17 @@ const schema = new mongoose.Scheme({
   ResetPasswordToken: String,
   ResetPasswordExpire: String,
 });
+schema.pre("save",async function(next){
+  if(!this.isModified("password")) return next();
+this.password= await bcrypt.hash(this.password,10)
+next();
+})
+schema.methods.getJWTToken= function(){
+ return  jwt.sign({
+  _id:this._id
+ },process.env.JWT_SECRET,{
+  expiresIn:"15d",
+ })
+}
 
 export const User = mongoose.model("User", schema);

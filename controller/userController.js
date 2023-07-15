@@ -24,10 +24,8 @@ export const register = catchAsyncError(async (req, res, next) => {
     },
   });
 
-  sendToken(res,user,"Registered Successfully ",201)
+  sendToken(res, user, "Registered Successfully", 201);
 });
-
-
 
 export const login = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
@@ -35,25 +33,32 @@ export const login = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("Please enter all fields", 400));
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
-    return next(new ErrorHandler("User doesn't  exists", 401));
+    return next(new ErrorHandler("User doesn't exist", 401));
   }
-  const isMatch = await User.comparePassword();
+
+  const isMatch = await user.comparePassword(password);
+
   if (!isMatch) {
-    return next(new ErrorHandler("Incorrect  Email or Password", 401));
+    return next(new ErrorHandler("Incorrect Email or Password", 401));
   }
-  
 
-  // user = await User.create({
-   
-  //   email,
-  //   password,
-  //   avatar: {
-  //     public_id: "tempid",
-  //     url: "tempurl",
-  //   },
-  // });
+  sendToken(res, user, `Welcome Back, ${user.name}!`, 200);
+});
 
-  sendToken(res,user,`Welcome Back Successfully ${user.name} `,200)
+
+export const logout = catchAsyncError(async (req, res, next) => {
+  res
+    .status(200)
+    .cookie("token", null, {
+      expires: new Date(Date.now()),
+      httpOnly: true,
+      secure: true,
+      sameSite: true,
+    })
+    .json({
+      success: true,
+      message: "Logged out Successfully",
+    });
 });

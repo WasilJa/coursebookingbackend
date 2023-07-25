@@ -13,7 +13,8 @@ import {
   removeFromPlaylist,
   getAllUsers,
   updateUserRole,
-  deleteUser
+  deleteUser,
+  deleteMyProfile
 } from "../controller/userController.js";
 import { isAuthenticated } from "../middlewares/auth.js";
 import singleUpload from "../middlewares/multer.js";
@@ -25,6 +26,8 @@ router.route("/register").post(singleUpload, register);
 router.route("/login").post(login);
 router.route("/logout").get(logout);
 router.route("/me").get(isAuthenticated, getMyProfile);
+router.route("/me").delete(isAuthenticated, deleteMyProfile);
+
 router.route("/changepassword").put(isAuthenticated, changePassword);
 router.route("/forgetpassword").post(forgetPassword);
 router.route("/resetpassword/:token").post(resetPassword);

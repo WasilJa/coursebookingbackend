@@ -284,3 +284,29 @@ export const deleteUser = catchAsyncError(async (req, res, next) => {
   }
 });
 
+
+
+export const deleteMyProfile = catchAsyncError(async (req, res, next) => {
+  const id = req.user._id; 
+  try {
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    await cloudinary.v2.uploader.destroy(user.avatar.public_id);
+
+    await User.deleteOne({ _id: id });
+
+    res
+      .status(200)
+      .clearCookie("token") 
+      .json({ success: true, message: "User deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+});
+
+

@@ -7,15 +7,38 @@ import crypto from "crypto";
 import { Course } from "../models/Course.js";
 import cloudinary from "cloudinary";
 import { getDataUri } from "../utils/dataUri.js";
+import validator from "validator";
+
+const isStrongPassword = (password) => {
+  // Define your criteria for a strong password here
+  const minLength = 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecialChar = /[!@#$%^&*()_+[\]{};':"\\|,.<>?]/.test(password);
+
+  return (
+    password.length >= minLength &&
+    hasUppercase &&
+    hasLowercase &&
+    hasNumber &&
+    hasSpecialChar
+  );
+};
 
 export const register = catchAsyncError(async (req, res, next) => {
   const { name, email, password } = req.body;
   const file = req.file;
-  // console.log(name, email, password)
+   console.log(name, email, password)
   if (!name || !email || !password || !file) {
     return next(new ErrorHandler("Please enter all fields", 400));
   }
-
+  if (!validator.isEmail(email)) {
+    return next(new ErrorHandler("Invalid email format", 400));
+  }
+  if (!isStrongPassword(password)) {
+    return next(new ErrorHandler("Password is not strong enough", 400));
+  }
   let user = await User.findOne({ email });
   if (user) {
     return next(new ErrorHandler("User already exists", 400));
@@ -39,6 +62,9 @@ export const register = catchAsyncError(async (req, res, next) => {
 
 export const login = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
+  if (!validator.isEmail(email)) {
+    return next(new ErrorHandler("Invalid email format", 400));
+  }
   if (!email || !password) {
     return next(new ErrorHandler("Please enter all fields", 400));
   }
@@ -85,6 +111,9 @@ export const changePassword = catchAsyncError(async (req, res, next) => {
   const { oldPassword, newPassword } = req.body;
   if (!oldPassword || !newPassword) {
     return next(new ErrorHandler("Please enter all fields", 400));
+  }
+  if (!isStrongPassword(newPassword)) {
+    return next(new ErrorHandler("New password is not strong enough", 400));
   }
   const user = await User.findById(req.user._id).select("+password");
   const isMatch = await user.comparePassword(oldPassword);

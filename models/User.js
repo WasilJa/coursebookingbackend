@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import crypto from "crypto"
+import crypto from "crypto";
 
 const schema = new mongoose.Schema({
   name: {
@@ -21,6 +21,18 @@ const schema = new mongoose.Schema({
     minLength: [6, "Password must be at least 6 characters"],
     select: false,
   },
+  // phoneNumber: {
+  //   type: String,
+  //   required: [true, "Please enter your phone number"],
+  // },
+  // phoneNumberOtp: {
+  //   type: String,
+  //   select: false,
+  // },
+  // phoneNumberOtpExpire: {
+  //   type: Date,
+  //   select: false,
+  // },
   role: {
     type: String,
     enum: ["admin", "user"],
@@ -58,8 +70,22 @@ const schema = new mongoose.Schema({
 });
 
 schema.pre("save", async function (next) {
+ 
   if (!this.isModified("password")) return next();
   this.password = await bcrypt.hash(this.password, 10);
+  // if (this.isModified("phoneNumber")) {
+  //   const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  //   try {
+  //     await sendOtpToPhoneNumber(this.phoneNumber, otp); // Replace with your OTP sending function
+  //   } catch (error) {
+  //     // Handle error if OTP sending fails
+  //     console.error("Error sending OTP:", error);
+  //     return next(new ErrorHandler("Failed to send OTP", 500));
+  //   }
+  //   const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
+  //   this.phoneNumberOtp = otpHash;
+  //   this.phoneNumberOtpExpire = Date.now() + 10 * 60 * 1000; // OTP validity period: 10 minutes
+  // }
   next();
 });
 
